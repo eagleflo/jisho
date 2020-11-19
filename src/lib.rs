@@ -2,6 +2,11 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 type Dictionary = HashMap<String, (String, String)>;
+pub struct Entry {
+    pub keb: String,
+    pub reb: String,
+    pub gloss: String,
+}
 
 fn read_dictionary() -> (Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
@@ -48,34 +53,57 @@ fn is_japanese(c: &char) -> bool {
         (*c >= '\u{f900}' && *c <= '\u{faff}') // CJK Compatibility Ideographs
 }
 
-pub fn lookup(input: &str) {
+pub fn lookup(input: &str) -> Vec<Entry> {
     let j2e = &DICTIONARIES.0;
     let e2j = &DICTIONARIES.1;
     let first = input.chars().next().unwrap();
+    let mut results = Vec::new();
 
     if is_japanese(&first) {
         if j2e.contains_key(input) {
             let (reb, gloss) = j2e.get(input).unwrap();
-            println!("{}【{}】- {}", input, reb, gloss);
+            let entry = Entry {
+                keb: input.to_string(),
+                reb: reb.clone(),
+                gloss: gloss.clone(),
+            };
+            results.push(entry);
         } else {
             for key in j2e.keys() {
                 if key.starts_with(input) {
                     let (reb, gloss) = j2e.get(key).unwrap();
-                    println!("{}【{}】- {}", input, reb, gloss);
+                    let entry = Entry {
+                        keb: key.to_string(),
+                        reb: reb.clone(),
+                        gloss: gloss.clone(),
+                    };
+                    results.push(entry);
                 }
             }
         }
     } else {
         if e2j.contains_key(input) {
             let (keb, reb) = e2j.get(input).unwrap();
-            println!("{}【{}】- {}", keb, reb, input);
+            let entry = Entry {
+                keb: keb.clone(),
+                reb: reb.clone(),
+                gloss: input.to_string(),
+            };
+            results.push(entry);
         } else {
             for key in e2j.keys() {
                 if key.starts_with(input) {
                     let (keb, reb) = e2j.get(key).unwrap();
-                    println!("{}【{}】- {}", keb, reb, key);
+                    let entry = Entry {
+                        keb: keb.clone(),
+                        reb: reb.clone(),
+                        gloss: key.to_string(),
+                    };
+                    results.push(entry);
                 }
             }
         }
     }
+
+    return results;
 }

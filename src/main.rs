@@ -11,10 +11,16 @@ fn main() {
             io::stdin()
                 .read_line(&mut input)
                 .expect("Failed to read line");
-            jisho::lookup(input.trim());
+            let results = jisho::lookup(input.trim());
+            for entry in results.iter() {
+                println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
+            }
         }
     } else {
         let input = &args[1];
-        jisho::lookup(input.trim());
+        let results = jisho::lookup(input.trim());
+        for entry in results.iter() {
+            println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
+        }
     }
 }
