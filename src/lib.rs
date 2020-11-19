@@ -44,7 +44,7 @@ fn is_japanese(c: &char) -> bool {
         (*c >= '\u{f900}' && *c <= '\u{faff}') // CJK Compatibility Ideographs
 }
 
-pub fn lookup(input: &String) {
+pub fn lookup(input: &str) {
     // FIXME: Use lazy_static macro?
     let (j2e, e2j) = read_dictionary();
     let first = input.chars().next().unwrap();
