@@ -1,3 +1,7 @@
+use std::env;
+
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+    let input = &args[1].trim().to_string();
+    jisho::lookup(input);
 }
