@@ -1,9 +1,9 @@
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-fn read_dictionary() -> (
-    HashMap<String, (String, String)>,
-    HashMap<String, (String, String)>,
-) {
+type Dictionary = HashMap<String, (String, String)>;
+
+fn read_dictionary() -> (Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
     let xml = include_str!("../JMdict_e.xml");
@@ -37,6 +37,10 @@ fn read_dictionary() -> (
     return (j2e, e2j);
 }
 
+lazy_static! {
+    static ref DICTIONARIES: (Dictionary, Dictionary) = read_dictionary();
+}
+
 fn is_japanese(c: &char) -> bool {
     (*c >= '\u{4e00}' && *c <= '\u{9fff}') || // CJK Unified Ideographs
         (*c >= '\u{3040}' && *c <= '\u{309f}') || // Hiragana
@@ -45,8 +49,8 @@ fn is_japanese(c: &char) -> bool {
 }
 
 pub fn lookup(input: &str) {
-    // FIXME: Use lazy_static macro?
-    let (j2e, e2j) = read_dictionary();
+    let j2e = &DICTIONARIES.0;
+    let e2j = &DICTIONARIES.1;
     let first = input.chars().next().unwrap();
 
     if is_japanese(&first) {
