@@ -8,15 +8,16 @@ pub struct Entry {
     pub gloss: String,
 }
 
-fn read_dictionary() -> (Dictionary, Dictionary) {
+fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
+    let mut reading = HashMap::new();
     let xml = include_str!("../JMdict_e.xml");
     let doc = match roxmltree::Document::parse(&xml) {
         Ok(doc) => doc,
         Err(e) => {
             println!("Error: {}", e);
-            return (j2e, e2j);
+            return (j2e, e2j, reading);
         }
     };
 
@@ -36,30 +37,38 @@ fn read_dictionary() -> (Dictionary, Dictionary) {
             };
             j2e.insert(keb.to_string(), (reb.to_string(), gloss.to_string()));
             e2j.insert(gloss.to_string(), (keb.to_string(), reb.to_string()));
+            reading.insert(reb.to_string(), (keb.to_string(), gloss.to_string()));
         }
     }
 
-    return (j2e, e2j);
+    return (j2e, e2j, reading);
 }
 
 lazy_static! {
-    static ref DICTIONARIES: (Dictionary, Dictionary) = read_dictionary();
+    static ref DICTIONARIES: (Dictionary, Dictionary, Dictionary) = read_dictionary();
 }
 
-fn is_japanese(c: &char) -> bool {
+fn is_kanji(c: &char) -> bool {
     (*c >= '\u{4e00}' && *c <= '\u{9fff}') || // CJK Unified Ideographs
-        (*c >= '\u{3040}' && *c <= '\u{309f}') || // Hiragana
-        (*c >= '\u{30a0}' && *c <= '\u{30ff}') || // Katakana
         (*c >= '\u{f900}' && *c <= '\u{faff}') // CJK Compatibility Ideographs
+}
+
+fn is_hiragana(c: &char) -> bool {
+    *c >= '\u{3040}' && *c <= '\u{309f}'
+}
+
+fn is_katakana(c: &char) -> bool {
+    *c >= '\u{30a0}' && *c <= '\u{30ff}'
 }
 
 pub fn lookup(input: &str) -> Vec<Entry> {
     let j2e = &DICTIONARIES.0;
     let e2j = &DICTIONARIES.1;
+    let reading = &DICTIONARIES.2;
     let first = input.chars().next().unwrap();
     let mut results = Vec::new();
 
-    if is_japanese(&first) {
+    if is_kanji(&first) {
         if j2e.contains_key(input) {
             let (reb, gloss) = j2e.get(input).unwrap();
             let entry = Entry {
@@ -75,6 +84,28 @@ pub fn lookup(input: &str) -> Vec<Entry> {
                     let entry = Entry {
                         keb: key.to_string(),
                         reb: reb.clone(),
+                        gloss: gloss.clone(),
+                    };
+                    results.push(entry);
+                }
+            }
+        }
+    } else if is_hiragana(&first) || is_katakana(&first) {
+        if reading.contains_key(input) {
+            let (keb, gloss) = reading.get(input).unwrap();
+            let entry = Entry {
+                keb: keb.clone(),
+                reb: input.to_string(),
+                gloss: gloss.clone(),
+            };
+            results.push(entry);
+        } else {
+            for key in reading.keys() {
+                if key.starts_with(input) {
+                    let (keb, gloss) = j2e.get(key).unwrap();
+                    let entry = Entry {
+                        keb: keb.clone(),
+                        reb: key.to_string(),
                         gloss: gloss.clone(),
                     };
                     results.push(entry);
