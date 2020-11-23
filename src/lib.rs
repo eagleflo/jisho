@@ -2,6 +2,8 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 type Dictionary = HashMap<String, (String, String)>;
+
+#[derive(PartialEq, Debug)]
 pub struct Entry {
     pub keb: String,
     pub reb: String,
@@ -137,4 +139,48 @@ pub fn lookup(input: &str) -> Vec<Entry> {
     }
 
     return results;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kanji_lookup() {
+        let results = lookup("緑");
+        assert_eq!(
+            results.first().unwrap(),
+            &Entry {
+                keb: "緑".to_string(),
+                reb: "みどり".to_string(),
+                gloss: "green".to_string()
+            }
+        )
+    }
+
+    #[test]
+    fn reading_lookup() {
+        let results = lookup("みどり");
+        assert_eq!(
+            results.first().unwrap(),
+            &Entry {
+                keb: "緑".to_string(),
+                reb: "みどり".to_string(),
+                gloss: "green".to_string()
+            }
+        )
+    }
+
+    #[test]
+    fn meaning_lookup() {
+        let results = lookup("green");
+        assert_eq!(
+            results.first().unwrap(),
+            &Entry {
+                keb: "緑".to_string(),
+                reb: "みどり".to_string(),
+                gloss: "green".to_string()
+            }
+        )
+    }
 }
