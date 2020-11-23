@@ -1,5 +1,16 @@
+use jisho::{lookup, Entry};
 use std::env;
 use std::io::{self, Write};
+
+fn print_results(results: Vec<&Entry>) {
+    for entry in results.iter() {
+        if entry.keb.is_empty() {
+            println!("{} - {}", entry.reb, entry.gloss);
+        } else {
+            println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
+        }
+    }
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -11,16 +22,12 @@ fn main() {
             io::stdin()
                 .read_line(&mut input)
                 .expect("Failed to read line");
-            let results = jisho::lookup(input.trim());
-            for entry in results.iter() {
-                println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
-            }
+            let results = lookup(input.trim());
+            print_results(results);
         }
     } else {
         let input = &args[1];
-        let results = jisho::lookup(input.trim());
-        for entry in results.iter() {
-            println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
-        }
+        let results = lookup(input.trim());
+        print_results(results);
     }
 }

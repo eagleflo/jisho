@@ -27,7 +27,7 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         if node.has_tag_name("entry") {
             let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
                 Some(e) => e.text().unwrap(),
-                None => continue,
+                None => "",
             };
             let reb = match node.descendants().find(|n| n.has_tag_name("reb")) {
                 Some(e) => e.text().unwrap(),
@@ -45,10 +45,12 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
                     gloss: gloss.to_string(),
                 };
 
-                if let Some(entries) = j2e.get_mut(&keb.to_string()) {
-                    entries.push(entry.clone());
-                } else {
-                    j2e.insert(keb.to_string(), vec![entry.clone()]);
+                if !keb.is_empty() {
+                    if let Some(entries) = j2e.get_mut(&keb.to_string()) {
+                        entries.push(entry.clone());
+                    } else {
+                        j2e.insert(keb.to_string(), vec![entry.clone()]);
+                    }
                 }
                 if let Some(entries) = e2j.get_mut(&gloss.to_string()) {
                     entries.push(entry.clone());
