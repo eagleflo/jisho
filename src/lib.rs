@@ -1,9 +1,9 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-type Dictionary = HashMap<String, (String, String)>;
+type Dictionary = HashMap<String, Vec<Entry>>;
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Entry {
     pub keb: String,
     pub reb: String,
@@ -37,9 +37,28 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
                 Some(e) => e.text().unwrap(),
                 None => continue,
             };
-            j2e.insert(keb.to_string(), (reb.to_string(), gloss.to_string()));
-            e2j.insert(gloss.to_string(), (keb.to_string(), reb.to_string()));
-            reading.insert(reb.to_string(), (keb.to_string(), gloss.to_string()));
+
+            let entry = Entry {
+                keb: keb.to_string(),
+                reb: reb.to_string(),
+                gloss: gloss.to_string(),
+            };
+
+            if let Some(entries) = j2e.get_mut(&keb.to_string()) {
+                entries.push(entry.clone());
+            } else {
+                j2e.insert(keb.to_string(), vec![entry.clone()]);
+            }
+            if let Some(entries) = e2j.get_mut(&gloss.to_string()) {
+                entries.push(entry.clone());
+            } else {
+                e2j.insert(gloss.to_string(), vec![entry.clone()]);
+            }
+            if let Some(entries) = reading.get_mut(&reb.to_string()) {
+                entries.push(entry.clone());
+            } else {
+                reading.insert(reb.to_string(), vec![entry.clone()]);
+            }
         }
     }
 
@@ -63,7 +82,7 @@ fn is_katakana(c: &char) -> bool {
     *c >= '\u{30a0}' && *c <= '\u{30ff}'
 }
 
-pub fn lookup(input: &str) -> Vec<Entry> {
+pub fn lookup(input: &str) -> Vec<&Entry> {
     let j2e = &DICTIONARIES.0;
     let e2j = &DICTIONARIES.1;
     let reading = &DICTIONARIES.2;
@@ -72,67 +91,37 @@ pub fn lookup(input: &str) -> Vec<Entry> {
 
     if is_kanji(&first) {
         if j2e.contains_key(input) {
-            let (reb, gloss) = j2e.get(input).unwrap();
-            let entry = Entry {
-                keb: input.to_string(),
-                reb: reb.clone(),
-                gloss: gloss.clone(),
-            };
-            results.push(entry);
+            let entries = j2e.get(input).unwrap();
+            results.extend(entries);
         } else {
             for key in j2e.keys() {
                 if key.starts_with(input) {
-                    let (reb, gloss) = j2e.get(key).unwrap();
-                    let entry = Entry {
-                        keb: key.to_string(),
-                        reb: reb.clone(),
-                        gloss: gloss.clone(),
-                    };
-                    results.push(entry);
+                    let entries = j2e.get(key).unwrap();
+                    results.extend(entries);
                 }
             }
         }
     } else if is_hiragana(&first) || is_katakana(&first) {
         if reading.contains_key(input) {
-            let (keb, gloss) = reading.get(input).unwrap();
-            let entry = Entry {
-                keb: keb.clone(),
-                reb: input.to_string(),
-                gloss: gloss.clone(),
-            };
-            results.push(entry);
+            let entries = reading.get(input).unwrap();
+            results.extend(entries);
         } else {
             for key in reading.keys() {
                 if key.starts_with(input) {
-                    let (keb, gloss) = j2e.get(key).unwrap();
-                    let entry = Entry {
-                        keb: keb.clone(),
-                        reb: key.to_string(),
-                        gloss: gloss.clone(),
-                    };
-                    results.push(entry);
+                    let entries = j2e.get(key).unwrap();
+                    results.extend(entries);
                 }
             }
         }
     } else {
         if e2j.contains_key(input) {
-            let (keb, reb) = e2j.get(input).unwrap();
-            let entry = Entry {
-                keb: keb.clone(),
-                reb: reb.clone(),
-                gloss: input.to_string(),
-            };
-            results.push(entry);
+            let entries = e2j.get(input).unwrap();
+            results.extend(entries);
         } else {
             for key in e2j.keys() {
                 if key.starts_with(input) {
-                    let (keb, reb) = e2j.get(key).unwrap();
-                    let entry = Entry {
-                        keb: keb.clone(),
-                        reb: reb.clone(),
-                        gloss: key.to_string(),
-                    };
-                    results.push(entry);
+                    let entries = e2j.get(key).unwrap();
+                    results.extend(entries);
                 }
             }
         }
@@ -148,39 +137,33 @@ mod tests {
     #[test]
     fn kanji_lookup() {
         let results = lookup("緑");
-        assert_eq!(
-            results.first().unwrap(),
-            &Entry {
-                keb: "緑".to_string(),
-                reb: "みどり".to_string(),
-                gloss: "green".to_string()
-            }
-        )
+        let entry = Entry {
+            keb: "緑".to_string(),
+            reb: "みどり".to_string(),
+            gloss: "green".to_string(),
+        };
+        assert_eq!(results.first().unwrap(), &&entry)
     }
 
     #[test]
     fn reading_lookup() {
         let results = lookup("みどり");
-        assert_eq!(
-            results.first().unwrap(),
-            &Entry {
-                keb: "緑".to_string(),
-                reb: "みどり".to_string(),
-                gloss: "green".to_string()
-            }
-        )
+        let entry = Entry {
+            keb: "緑".to_string(),
+            reb: "みどり".to_string(),
+            gloss: "green".to_string(),
+        };
+        assert_eq!(results.first().unwrap(), &&entry)
     }
 
     #[test]
     fn meaning_lookup() {
         let results = lookup("green");
-        assert_eq!(
-            results.first().unwrap(),
-            &Entry {
-                keb: "緑".to_string(),
-                reb: "みどり".to_string(),
-                gloss: "green".to_string()
-            }
-        )
+        let entry = Entry {
+            keb: "緑".to_string(),
+            reb: "みどり".to_string(),
+            gloss: "green".to_string(),
+        };
+        assert!(results.contains(&&entry))
     }
 }
