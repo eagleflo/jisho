@@ -23,45 +23,43 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         }
     };
 
-    for node in doc.descendants() {
-        if node.has_tag_name("entry") {
-            let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
-                Some(e) => e.text().unwrap(),
-                None => "",
-            };
-            let reb = match node.descendants().find(|n| n.has_tag_name("reb")) {
-                Some(e) => e.text().unwrap(),
-                None => continue,
-            };
-            let glosses = node
-                .descendants()
-                .filter(|n| n.has_tag_name("gloss"))
-                .map(|n| n.text().unwrap());
+    for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
+        let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
+            Some(e) => e.text().unwrap(),
+            None => "",
+        };
+        let reb = match node.descendants().find(|n| n.has_tag_name("reb")) {
+            Some(e) => e.text().unwrap(),
+            None => continue,
+        };
+        let glosses = node
+            .descendants()
+            .filter(|n| n.has_tag_name("gloss"))
+            .map(|n| n.text().unwrap());
 
-            for gloss in glosses {
-                let entry = Entry {
-                    keb: keb.to_string(),
-                    reb: reb.to_string(),
-                    gloss: gloss.to_string(),
-                };
+        for gloss in glosses {
+            let entry = Entry {
+                keb: keb.to_string(),
+                reb: reb.to_string(),
+                gloss: gloss.to_string(),
+            };
 
-                if !keb.is_empty() {
-                    if let Some(entries) = j2e.get_mut(&keb.to_string()) {
-                        entries.push(entry.clone());
-                    } else {
-                        j2e.insert(keb.to_string(), vec![entry.clone()]);
-                    }
-                }
-                if let Some(entries) = e2j.get_mut(&gloss.to_string()) {
+            if !keb.is_empty() {
+                if let Some(entries) = j2e.get_mut(&keb.to_string()) {
                     entries.push(entry.clone());
                 } else {
-                    e2j.insert(gloss.to_string(), vec![entry.clone()]);
+                    j2e.insert(keb.to_string(), vec![entry.clone()]);
                 }
-                if let Some(entries) = reading.get_mut(&reb.to_string()) {
-                    entries.push(entry.clone());
-                } else {
-                    reading.insert(reb.to_string(), vec![entry.clone()]);
-                }
+            }
+            if let Some(entries) = e2j.get_mut(&gloss.to_string()) {
+                entries.push(entry.clone());
+            } else {
+                e2j.insert(gloss.to_string(), vec![entry.clone()]);
+            }
+            if let Some(entries) = reading.get_mut(&reb.to_string()) {
+                entries.push(entry.clone());
+            } else {
+                reading.insert(reb.to_string(), vec![entry.clone()]);
             }
         }
     }
