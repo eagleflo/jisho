@@ -80,52 +80,34 @@ fn is_katakana(c: &char) -> bool {
     *c >= '\u{30a0}' && *c <= '\u{30ff}'
 }
 
+fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+    let mut results = Vec::new();
+    if dictionary.contains_key(input) {
+        let entries = dictionary.get(input).unwrap();
+        results.extend(entries);
+    } else {
+        for key in dictionary.keys() {
+            if key.starts_with(input) {
+                let entries = dictionary.get(input).unwrap();
+                results.extend(entries);
+            }
+        }
+    }
+    return results;
+}
+
 pub fn lookup(input: &str) -> Vec<&Entry> {
     let j2e = &DICTIONARIES.0;
     let e2j = &DICTIONARIES.1;
     let reading = &DICTIONARIES.2;
     let first = input.chars().next().unwrap();
-    let mut results = Vec::new();
-
-    if is_kanji(&first) {
-        if j2e.contains_key(input) {
-            let entries = j2e.get(input).unwrap();
-            results.extend(entries);
-        } else {
-            for key in j2e.keys() {
-                if key.starts_with(input) {
-                    let entries = j2e.get(key).unwrap();
-                    results.extend(entries);
-                }
-            }
-        }
+    return if is_kanji(&first) {
+        collect_results(j2e, input)
     } else if is_hiragana(&first) || is_katakana(&first) {
-        if reading.contains_key(input) {
-            let entries = reading.get(input).unwrap();
-            results.extend(entries);
-        } else {
-            for key in reading.keys() {
-                if key.starts_with(input) {
-                    let entries = j2e.get(key).unwrap();
-                    results.extend(entries);
-                }
-            }
-        }
+        collect_results(reading, input)
     } else {
-        if e2j.contains_key(input) {
-            let entries = e2j.get(input).unwrap();
-            results.extend(entries);
-        } else {
-            for key in e2j.keys() {
-                if key.starts_with(input) {
-                    let entries = e2j.get(key).unwrap();
-                    results.extend(entries);
-                }
-            }
-        }
-    }
-
-    return results;
+        collect_results(e2j, input)
+    };
 }
 
 #[cfg(test)]
