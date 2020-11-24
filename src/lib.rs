@@ -10,6 +10,14 @@ pub struct Entry {
     pub gloss: String,
 }
 
+fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
+    if let Some(entries) = dictionary.get_mut(&key) {
+        entries.push(entry.clone());
+    } else {
+        dictionary.insert(key, vec![entry.clone()]);
+    }
+}
+
 fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
@@ -45,22 +53,10 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             };
 
             if !keb.is_empty() {
-                if let Some(entries) = j2e.get_mut(&keb.to_string()) {
-                    entries.push(entry.clone());
-                } else {
-                    j2e.insert(keb.to_string(), vec![entry.clone()]);
-                }
+                upsert(&mut j2e, keb.to_string(), &entry);
             }
-            if let Some(entries) = e2j.get_mut(&gloss.to_string()) {
-                entries.push(entry.clone());
-            } else {
-                e2j.insert(gloss.to_string(), vec![entry.clone()]);
-            }
-            if let Some(entries) = reading.get_mut(&reb.to_string()) {
-                entries.push(entry.clone());
-            } else {
-                reading.insert(reb.to_string(), vec![entry.clone()]);
-            }
+            upsert(&mut e2j, gloss.to_string(), &entry);
+            upsert(&mut reading, reb.to_string(), &entry);
         }
     }
 
