@@ -31,7 +31,7 @@ fn main() {
             print_results(results);
         }
     } else {
-        let input = &args[1];
+        let input = &args[1..].join(" ");
         let results = lookup(input.trim());
         print_results(results);
     }
