@@ -8,6 +8,7 @@ pub struct Entry {
     pub kanji: String,
     pub reading: String,
     pub meanings: Vec<String>,
+    pub frequency: i32,
 }
 
 fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
@@ -40,6 +41,14 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             Some(e) => e.text().unwrap(),
             None => continue,
         };
+        let nf = match node
+            .descendants()
+            .find(|n| n.has_tag_name("re_pri") && n.text().unwrap().starts_with("nf"))
+        {
+            Some(e) => e.text().unwrap(),
+            None => "",
+        };
+
         let glosses = node
             .descendants()
             .filter(|n| n.has_tag_name("gloss"))
@@ -50,6 +59,11 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             kanji: keb.to_string(),
             reading: reb.to_string(),
             meanings: glosses,
+            frequency: if !nf.is_empty() {
+                nf[2..].parse().unwrap_or(999)
+            } else {
+                999
+            },
         };
 
         if !keb.is_empty() {
@@ -94,7 +108,8 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
             }
         }
     }
-    return results;
+    results.sort_by_key(|e| e.frequency);
+    results
 }
 
 pub fn lookup(input: &str) -> Vec<&Entry> {
