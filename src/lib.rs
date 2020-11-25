@@ -89,7 +89,7 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
     } else {
         for key in dictionary.keys() {
             if key.starts_with(input) {
-                let entries = dictionary.get(input).unwrap();
+                let entries = dictionary.get(key).unwrap();
                 results.extend(entries);
             }
         }
