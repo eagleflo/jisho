@@ -5,9 +5,9 @@ type Dictionary = HashMap<String, Vec<Entry>>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Entry {
-    pub keb: String,
-    pub reb: String,
-    pub gloss: String,
+    pub kanji: String,
+    pub reading: String,
+    pub meanings: Vec<String>,
 }
 
 fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
@@ -43,21 +43,22 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         let glosses = node
             .descendants()
             .filter(|n| n.has_tag_name("gloss"))
-            .map(|n| n.text().unwrap());
+            .map(|n| n.text().unwrap().to_string())
+            .collect();
 
-        for gloss in glosses {
-            let entry = Entry {
-                keb: keb.to_string(),
-                reb: reb.to_string(),
-                gloss: gloss.to_string(),
-            };
+        let entry = Entry {
+            kanji: keb.to_string(),
+            reading: reb.to_string(),
+            meanings: glosses,
+        };
 
-            if !keb.is_empty() {
-                upsert(&mut j2e, keb.to_string(), &entry);
-            }
-            upsert(&mut e2j, gloss.to_string(), &entry);
-            upsert(&mut reading, reb.to_string(), &entry);
+        if !keb.is_empty() {
+            upsert(&mut j2e, keb.to_string(), &entry);
         }
+        for meaning in &entry.meanings {
+            upsert(&mut e2j, meaning.to_string(), &entry);
+        }
+        upsert(&mut reading, reb.to_string(), &entry);
     }
 
     return (j2e, e2j, reading);
@@ -118,9 +119,9 @@ mod tests {
     fn kanji_lookup() {
         let results = lookup("緑");
         let entry = Entry {
-            keb: "緑".to_string(),
-            reb: "みどり".to_string(),
-            gloss: "green".to_string(),
+            kanji: "緑".to_string(),
+            reading: "みどり".to_string(),
+            meanings: vec!["green".to_string()],
         };
         assert_eq!(results.first().unwrap(), &&entry)
     }
@@ -129,9 +130,9 @@ mod tests {
     fn reading_lookup() {
         let results = lookup("みどり");
         let entry = Entry {
-            keb: "緑".to_string(),
-            reb: "みどり".to_string(),
-            gloss: "green".to_string(),
+            kanji: "緑".to_string(),
+            reading: "みどり".to_string(),
+            meanings: vec!["green".to_string()],
         };
         assert_eq!(results.first().unwrap(), &&entry)
     }
@@ -140,9 +141,9 @@ mod tests {
     fn meaning_lookup() {
         let results = lookup("green");
         let entry = Entry {
-            keb: "緑".to_string(),
-            reb: "みどり".to_string(),
-            gloss: "green".to_string(),
+            kanji: "緑".to_string(),
+            reading: "みどり".to_string(),
+            meanings: vec!["green".to_string()],
         };
         assert!(results.contains(&&entry))
     }

@@ -4,10 +4,15 @@ use std::io::{self, Write};
 
 fn print_results(results: Vec<&Entry>) {
     for entry in results.iter() {
-        if entry.keb.is_empty() {
-            println!("{} - {}", entry.reb, entry.gloss);
+        if entry.kanji.is_empty() {
+            println!("{} - {}", entry.reading, entry.meanings.join(", "));
         } else {
-            println!("{}【{}】- {}", entry.keb, entry.reb, entry.gloss);
+            println!(
+                "{}【{}】- {}",
+                entry.kanji,
+                entry.reading,
+                entry.meanings.join(", ")
+            );
         }
     }
 }
