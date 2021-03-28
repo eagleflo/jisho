@@ -1,9 +1,10 @@
 use lazy_static::lazy_static;
+use serde::Deserialize;
 use std::collections::HashMap;
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
@@ -11,75 +12,13 @@ pub struct Entry {
     pub frequency: i32,
 }
 
-fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
-    if let Some(entries) = dictionary.get_mut(&key) {
-        entries.push(entry.clone());
-    } else {
-        dictionary.insert(key, vec![entry.clone()]);
-    }
-}
-
-fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
-    let mut j2e = HashMap::new();
-    let mut e2j = HashMap::new();
-    let mut reading = HashMap::new();
-    let xml = include_str!("../JMdict_e.xml");
-    let doc = match roxmltree::Document::parse(&xml) {
-        Ok(doc) => doc,
-        Err(e) => {
-            println!("Error: {}", e);
-            return (j2e, e2j, reading);
-        }
-    };
-
-    for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
-        let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
-            Some(e) => e.text().unwrap(),
-            None => "",
-        };
-        let reb = match node.descendants().find(|n| n.has_tag_name("reb")) {
-            Some(e) => e.text().unwrap(),
-            None => continue,
-        };
-        let nf = match node
-            .descendants()
-            .find(|n| n.has_tag_name("re_pri") && n.text().unwrap().starts_with("nf"))
-        {
-            Some(e) => e.text().unwrap(),
-            None => "",
-        };
-
-        let glosses = node
-            .descendants()
-            .filter(|n| n.has_tag_name("gloss"))
-            .map(|n| n.text().unwrap().to_string())
-            .collect();
-
-        let entry = Entry {
-            kanji: keb.to_string(),
-            reading: reb.to_string(),
-            meanings: glosses,
-            frequency: if !nf.is_empty() {
-                nf[2..].parse().unwrap_or(999)
-            } else {
-                999
-            },
-        };
-
-        if !keb.is_empty() {
-            upsert(&mut j2e, keb.to_string(), &entry);
-        }
-        for meaning in &entry.meanings {
-            upsert(&mut e2j, meaning.to_string(), &entry);
-        }
-        upsert(&mut reading, reb.to_string(), &entry);
-    }
-
-    return (j2e, e2j, reading);
-}
-
 lazy_static! {
-    static ref DICTIONARIES: (Dictionary, Dictionary, Dictionary) = read_dictionary();
+    static ref J2E: Dictionary =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/j2e.json"))).unwrap();
+    static ref E2J: Dictionary =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/e2j.json"))).unwrap();
+    static ref READING: Dictionary =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/reading.json"))).unwrap();
 }
 
 fn is_kanji(c: &char) -> bool {
@@ -113,16 +52,13 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
 }
 
 pub fn lookup(input: &str) -> Vec<&Entry> {
-    let j2e = &DICTIONARIES.0;
-    let e2j = &DICTIONARIES.1;
-    let reading = &DICTIONARIES.2;
     let first = input.chars().next().unwrap();
     return if is_kanji(&first) {
-        collect_results(j2e, input)
+        collect_results(&J2E, input)
     } else if is_hiragana(&first) || is_katakana(&first) {
-        collect_results(reading, input)
+        collect_results(&READING, input)
     } else {
-        collect_results(e2j, input)
+        collect_results(&E2J, input)
     };
 }
 
