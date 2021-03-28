@@ -130,36 +130,33 @@ pub fn lookup(input: &str) -> Vec<&Entry> {
 mod tests {
     use super::*;
 
+    fn entry() -> Entry {
+        Entry {
+            kanji: "緑".to_string(),
+            reading: "みどり".to_string(),
+            meanings: vec![
+                "green".to_string(),
+                "greenery (esp. fresh verdure)".to_string(),
+            ],
+            frequency: 3,
+        }
+    }
+
     #[test]
     fn kanji_lookup() {
         let results = lookup("緑");
-        let entry = Entry {
-            kanji: "緑".to_string(),
-            reading: "みどり".to_string(),
-            meanings: vec!["green".to_string()],
-        };
-        assert_eq!(results.first().unwrap(), &&entry)
+        assert_eq!(results.first().unwrap(), &&entry())
     }
 
     #[test]
     fn reading_lookup() {
         let results = lookup("みどり");
-        let entry = Entry {
-            kanji: "緑".to_string(),
-            reading: "みどり".to_string(),
-            meanings: vec!["green".to_string()],
-        };
-        assert_eq!(results.first().unwrap(), &&entry)
+        assert_eq!(results.first().unwrap(), &&entry())
     }
 
     #[test]
     fn meaning_lookup() {
         let results = lookup("green");
-        let entry = Entry {
-            kanji: "緑".to_string(),
-            reading: "みどり".to_string(),
-            meanings: vec!["green".to_string()],
-        };
-        assert!(results.contains(&&entry))
+        assert!(results.contains(&&entry()))
     }
 }
