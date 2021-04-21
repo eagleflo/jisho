@@ -53,13 +53,13 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
 
 pub fn lookup(input: &str) -> Vec<&Entry> {
     let first = input.chars().next().unwrap();
-    return if is_kanji(&first) {
+    if is_kanji(&first) {
         collect_results(&J2E, input)
     } else if is_hiragana(&first) || is_katakana(&first) {
         collect_results(&READING, input)
     } else {
         collect_results(&E2J, input)
-    };
+    }
 }
 
 #[cfg(test)]
