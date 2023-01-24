@@ -25,7 +25,11 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut e2j = HashMap::new();
     let mut reading = HashMap::new();
     let xml = include_str!("./JMdict_e.xml");
-    let doc = match roxmltree::Document::parse(xml) {
+    let opt = roxmltree::ParsingOptions {
+        allow_dtd: true,
+        ..roxmltree::ParsingOptions::default()
+    };
+    let doc = match roxmltree::Document::parse_with_options(xml, opt) {
         Ok(doc) => doc,
         Err(e) => {
             println!("Error: {}", e);
