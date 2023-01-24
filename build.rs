@@ -76,7 +76,7 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         upsert(&mut reading, reb.to_string(), &entry);
     }
 
-    return (j2e, e2j, reading);
+    (j2e, e2j, reading)
 }
 
 fn main() {
