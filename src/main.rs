@@ -24,11 +24,14 @@ fn main() {
             let mut input = String::new();
             print!("> ");
             io::stdout().flush().unwrap();
-            io::stdin()
+            let bytes_read = io::stdin()
                 .read_line(&mut input)
                 .expect("Failed to read line");
             if input == "\n" {
                 continue;
+            }
+            if bytes_read == 0 {
+                break;
             }
             let results = lookup(input.trim());
             print_results(results);
