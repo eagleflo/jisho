@@ -99,4 +99,6 @@ fn main() {
     let reading_path = Path::new(&out_dir).join("reading.json");
     let reading_json = json!(reading);
     fs::write(reading_path, reading_json.to_string()).unwrap();
+
+    println!("cargo:rerun-if-changed=JMdict_e.xml");
 }
