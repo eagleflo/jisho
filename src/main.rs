@@ -27,6 +27,9 @@ fn main() {
             io::stdin()
                 .read_line(&mut input)
                 .expect("Failed to read line");
+            if input == "\n" {
+                continue;
+            }
             let results = lookup(input.trim());
             print_results(results);
         }
