@@ -25,7 +25,7 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut e2j = HashMap::new();
     let mut reading = HashMap::new();
     let xml = include_str!("./JMdict_e.xml");
-    let doc = match roxmltree::Document::parse(&xml) {
+    let doc = match roxmltree::Document::parse(xml) {
         Ok(doc) => doc,
         Err(e) => {
             println!("Error: {}", e);
@@ -86,13 +86,13 @@ fn main() {
 
     let j2e_path = Path::new(&out_dir).join("j2e.json");
     let j2e_json = json!(j2e);
-    fs::write(&j2e_path, j2e_json.to_string()).unwrap();
+    fs::write(j2e_path, j2e_json.to_string()).unwrap();
 
     let e2j_path = Path::new(&out_dir).join("e2j.json");
     let e2j_json = json!(e2j);
-    fs::write(&e2j_path, e2j_json.to_string()).unwrap();
+    fs::write(e2j_path, e2j_json.to_string()).unwrap();
 
     let reading_path = Path::new(&out_dir).join("reading.json");
     let reading_json = json!(reading);
-    fs::write(&reading_path, reading_json.to_string()).unwrap();
+    fs::write(reading_path, reading_json.to_string()).unwrap();
 }
