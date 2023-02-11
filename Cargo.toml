@@ -1,6 +1,6 @@
 [package]
 name = "jisho"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Aku Kotkavuo <aku.kotkavuo@gmail.com>"]
 edition = "2021"
 description = "Jisho is a CLI tool & Rust library that provides a Japanese-English dictionary."
