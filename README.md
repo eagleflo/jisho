@@ -6,6 +6,18 @@ started by Jim Breen.
 
 ## Use
 
+Interactively:
+
+``` shell
+$ jisho
+> 積ん読
+積ん読【つんどく】- buying books and not reading them, stockpiling books, tsundoku, books bought but not read
+> International Space Station
+国際宇宙ステーション【こくさいうちゅうステーション】- International Space Station
+```
+
+Looking up individual entries:
+
 ```shell
 $ jisho 辞書
 辞書【じしょ】- dictionary
