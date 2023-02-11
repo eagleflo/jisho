@@ -1,6 +1,8 @@
-use jisho::{lookup, Entry};
 use std::env;
-use std::io::{self, Write};
+
+use rustyline::Editor;
+
+use jisho::{lookup, Entry};
 
 fn print_results(results: Vec<&Entry>) {
     for entry in results.iter() {
@@ -20,21 +22,20 @@ fn print_results(results: Vec<&Entry>) {
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
+        let mut rl = Editor::<()>::new().unwrap();
         loop {
-            let mut input = String::new();
-            print!("> ");
-            io::stdout().flush().unwrap();
-            let bytes_read = io::stdin()
-                .read_line(&mut input)
-                .expect("Failed to read line");
-            if input == "\n" {
-                continue;
+            let readline = rl.readline("> ");
+            match readline {
+                Ok(line) => {
+                    if line.is_empty() {
+                        continue;
+                    }
+                    rl.add_history_entry(line.as_str());
+                    let results = lookup(line.trim());
+                    print_results(results);
+                }
+                Err(_) => break,
             }
-            if bytes_read == 0 {
-                break;
-            }
-            let results = lookup(input.trim());
-            print_results(results);
         }
     } else {
         let input = &args[1..].join(" ");
