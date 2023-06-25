@@ -1,29 +1,17 @@
-use serde::Serialize;
-use serde_json::json;
-use std::{collections::HashMap, env, fs, path::Path};
+use rusqlite::{Connection, Result};
+use std::{env, fs, path::Path};
 
-type Dictionary = HashMap<String, Vec<Entry>>;
-
-#[derive(Clone, Serialize)]
+#[derive(Clone)]
 pub struct Entry {
+    pub ent_seq: u32,
     pub kanji: String,
     pub reading: String,
     pub meanings: Vec<String>,
     pub frequency: i32,
 }
 
-fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
-    if let Some(entries) = dictionary.get_mut(&key) {
-        entries.push(entry.clone());
-    } else {
-        dictionary.insert(key, vec![entry.clone()]);
-    }
-}
-
-fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
-    let mut j2e = HashMap::new();
-    let mut e2j = HashMap::new();
-    let mut reading = HashMap::new();
+fn read_dictionary() -> Vec<Entry> {
+    let mut entries = Vec::new();
     let xml = fs::read_to_string("./JMdict_e.xml").unwrap();
     let opt = roxmltree::ParsingOptions {
         allow_dtd: true,
@@ -33,11 +21,15 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         Ok(doc) => doc,
         Err(e) => {
             println!("Error: {}", e);
-            return (j2e, e2j, reading);
+            return entries;
         }
     };
 
     for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
+        let ent_seq = match node.descendants().find(|n| n.has_tag_name("ent_seq")) {
+            Some(e) => e.text().unwrap(),
+            None => continue,
+        };
         let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
             Some(e) => e.text().unwrap(),
             None => "",
@@ -61,6 +53,7 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             .collect();
 
         let entry = Entry {
+            ent_seq: ent_seq.parse().unwrap(),
             kanji: keb.to_string(),
             reading: reb.to_string(),
             meanings: glosses,
@@ -71,34 +64,48 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             },
         };
 
-        if !keb.is_empty() {
-            upsert(&mut j2e, keb.to_string(), &entry);
-        }
-        for meaning in &entry.meanings {
-            upsert(&mut e2j, meaning.to_string(), &entry);
-        }
-        upsert(&mut reading, reb.to_string(), &entry);
+        entries.push(entry)
     }
 
-    (j2e, e2j, reading)
+    entries
+}
+
+fn write_database(entries: Vec<Entry>) -> Result<()> {
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let db_path = Path::new(&out_dir).join("jisho.db");
+    let db = Connection::open(db_path.as_path())?;
+    db.execute("DROP TABLE IF EXISTS entries", ())?;
+    db.execute(
+        "CREATE TABLE entries (
+            ent_seq INTEGER PRIMARY KEY,
+            kanji TEXT NOT NULL,
+            reading TEXT NOT NULL,
+            meanings TEXT NOT NULL,
+            frequency INTEGER NOT NULL
+        )",
+        (),
+    )?;
+
+    db.execute("BEGIN", ())?;
+    for entry in entries {
+        db.execute(
+            "INSERT INTO entries (ent_seq, kanji, reading, meanings, frequency) VALUES (?1, ?2, ?3, ?4, ?5)",
+            (
+                &entry.ent_seq,
+                &entry.kanji,
+                &entry.reading,
+                &entry.meanings.join(", "),
+                &entry.frequency,
+            ),
+        )?;
+    }
+    db.execute("END", ())?;
+
+    Ok(())
 }
 
 fn main() {
-    let (j2e, e2j, reading) = read_dictionary();
-
-    let out_dir = env::var_os("OUT_DIR").unwrap();
-
-    let j2e_path = Path::new(&out_dir).join("j2e.json");
-    let j2e_json = json!(j2e);
-    fs::write(j2e_path, j2e_json.to_string()).unwrap();
-
-    let e2j_path = Path::new(&out_dir).join("e2j.json");
-    let e2j_json = json!(e2j);
-    fs::write(e2j_path, e2j_json.to_string()).unwrap();
-
-    let reading_path = Path::new(&out_dir).join("reading.json");
-    let reading_json = json!(reading);
-    fs::write(reading_path, reading_json.to_string()).unwrap();
-
+    let entries = read_dictionary();
+    write_database(entries);
     println!("cargo:rerun-if-changed=JMdict_e.xml");
 }

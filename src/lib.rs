@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+use rusqlite::{Connection, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -6,19 +7,17 @@ type Dictionary = HashMap<String, Vec<Entry>>;
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Entry {
+    pub ent_seq: u32,
     pub kanji: String,
     pub reading: String,
     pub meanings: Vec<String>,
     pub frequency: i32,
 }
 
-lazy_static! {
-    static ref J2E: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/j2e.json"))).unwrap();
-    static ref E2J: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/e2j.json"))).unwrap();
-    static ref READING: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/reading.json"))).unwrap();
+const DB_FILE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/jisho.db"));
+static DB: Connection = {
+    let mut tmp_file = tempfile::tempfile();
+    tmp_file.write_all(DB_FILE);
 }
 
 fn is_kanji(c: &char) -> bool {
@@ -34,8 +33,9 @@ fn is_katakana(c: &char) -> bool {
     *c >= '\u{30a0}' && *c <= '\u{30ff}'
 }
 
-fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+fn collect_results(input: &str) -> Vec<&'static Entry> {
     let mut results = Vec::new();
+
     if dictionary.contains_key(input) {
         let entries = dictionary.get(input).unwrap();
         results.extend(entries);
@@ -52,14 +52,23 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
 }
 
 pub fn lookup(input: &str) -> Vec<&Entry> {
+    let mut results = Vec::new();
+
     let first = input.chars().next().unwrap();
     if is_kanji(&first) {
-        collect_results(&J2E, input)
+        let mut stmt = db.prepare(
+            "SELECT kanji, reading, meanings, frequency FROM entries WHERE kanji = (?1)",
+            &input,
+        )?;
+        // J2E, look up from kanji
     } else if is_hiragana(&first) || is_katakana(&first) {
-        collect_results(&READING, input)
+        // READING, look up from reading
     } else {
-        collect_results(&E2J, input)
+        // E2J, look up from meanings
     }
+
+    results.sort_by_key(|e| e.frequency);
+    results
 }
 
 #[cfg(test)]
