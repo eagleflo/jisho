@@ -1,7 +1,16 @@
 use flate2::read::GzDecoder;
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
 use serde::Serialize;
 use serde_json::json;
-use std::{collections::HashMap, env, fs, io::Read, path::Path};
+use std::{
+    collections::HashMap,
+    env,
+    error::Error,
+    fs,
+    io::{Read, Write},
+    path::Path,
+};
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
@@ -86,22 +95,32 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     (j2e, e2j, reading)
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let (j2e, e2j, reading) = read_dictionary();
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    let j2e_path = Path::new(&out_dir).join("j2e.json");
+    let j2e_path = Path::new(&out_dir).join("j2e.json.zlib");
     let j2e_json = json!(j2e);
-    fs::write(j2e_path, j2e_json.to_string()).unwrap();
+    let mut j2e_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    j2e_compressed.write_all(j2e_json.to_string().as_bytes())?;
+    let j2e_bytes = j2e_compressed.finish()?;
+    fs::write(j2e_path, j2e_bytes)?;
 
-    let e2j_path = Path::new(&out_dir).join("e2j.json");
+    let e2j_path = Path::new(&out_dir).join("e2j.json.zlib");
     let e2j_json = json!(e2j);
-    fs::write(e2j_path, e2j_json.to_string()).unwrap();
+    let mut e2j_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    e2j_compressed.write_all(e2j_json.to_string().as_bytes())?;
+    let e2j_bytes = e2j_compressed.finish()?;
+    fs::write(e2j_path, e2j_bytes)?;
 
-    let reading_path = Path::new(&out_dir).join("reading.json");
+    let reading_path = Path::new(&out_dir).join("reading.json.zlib");
     let reading_json = json!(reading);
-    fs::write(reading_path, reading_json.to_string()).unwrap();
+    let mut reading_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    reading_compressed.write_all(reading_json.to_string().as_bytes())?;
+    let reading_bytes = reading_compressed.finish()?;
+    fs::write(reading_path, reading_bytes)?;
 
     println!("cargo:rerun-if-changed=JMdict_e.gz");
+    Ok(())
 }

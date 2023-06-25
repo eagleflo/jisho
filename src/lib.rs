@@ -1,6 +1,8 @@
+use flate2::read::ZlibDecoder;
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use serde::Deserialize;
+use std::io::prelude::*;
 
 type Dictionary = FxHashMap<String, Vec<Entry>>;
 
@@ -13,12 +15,27 @@ pub struct Entry {
 }
 
 lazy_static! {
-    static ref J2E: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/j2e.json"))).unwrap();
-    static ref E2J: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/e2j.json"))).unwrap();
-    static ref READING: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/reading.json"))).unwrap();
+    static ref J2E: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/j2e.json.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut s = String::new();
+        d.read_to_string(&mut s).unwrap();
+        serde_json::from_str(&s).unwrap()
+    };
+    static ref E2J: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/e2j.json.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut s = String::new();
+        d.read_to_string(&mut s).unwrap();
+        serde_json::from_str(&s).unwrap()
+    };
+    static ref READING: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/reading.json.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut s = String::new();
+        d.read_to_string(&mut s).unwrap();
+        serde_json::from_str(&s).unwrap()
+    };
 }
 
 fn strip_first(input: &str) -> &str {
