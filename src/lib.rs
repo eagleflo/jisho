@@ -52,10 +52,9 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
 }
 
 pub fn lookup(input: &str) -> Vec<&Entry> {
-    let first = input.chars().next().unwrap();
-    if is_kanji(&first) {
+    if input.chars().any(|c| is_kanji(&c)) {
         collect_results(&J2E, input)
-    } else if is_hiragana(&first) || is_katakana(&first) {
+    } else if input.chars().all(|c| is_hiragana(&c) || is_katakana(&c)) {
         collect_results(&READING, input)
     } else {
         collect_results(&E2J, input)
