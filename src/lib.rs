@@ -72,7 +72,8 @@ mod tests {
             reading: "みどり".to_string(),
             meanings: vec![
                 "green".to_string(),
-                "greenery (esp. fresh verdure)".to_string(),
+                "greenery".to_string(),
+                "verdure".to_string(),
             ],
             frequency: 3,
         }
