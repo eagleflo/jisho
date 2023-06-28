@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+! type hyperfine &> /dev/null && echo "Install hyperfine to run the benchmark"
+
+cargo build --release
+hyperfine "cargo run --release 緑"
+hyperfine "cargo run --release みどり"
+hyperfine "cargo run --release green"
