@@ -1,8 +1,8 @@
 use lazy_static::lazy_static;
+use rustc_hash::FxHashMap;
 use serde::Deserialize;
-use std::collections::HashMap;
 
-type Dictionary = HashMap<String, Vec<Entry>>;
+type Dictionary = FxHashMap<String, Vec<Entry>>;
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Entry {
