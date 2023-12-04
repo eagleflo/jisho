@@ -21,6 +21,18 @@ lazy_static! {
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/reading.json"))).unwrap();
 }
 
+fn strip_first(input: &str) -> &str {
+    let mut chars = input.chars();
+    chars.next();
+    chars.as_str()
+}
+
+fn strip_last(input: &str) -> &str {
+    let mut chars = input.chars();
+    chars.next_back();
+    chars.as_str()
+}
+
 fn is_kanji(c: &char) -> bool {
     (*c >= '\u{4e00}' && *c <= '\u{9fff}') || // CJK Unified Ideographs
         (*c >= '\u{f900}' && *c <= '\u{faff}') // CJK Compatibility Ideographs
@@ -79,13 +91,48 @@ fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static
     results
 }
 
-pub fn lookup(input: &str) -> Vec<&Entry> {
+enum Mode {
+    Default,
+    Exact,
+    Prefix,
+    Postfix,
+}
+
+pub fn lookup(input_raw: &str) -> Vec<&Entry> {
+    let mut mode: Mode = Mode::Default;
+    let mut input = input_raw;
+    if input_raw.starts_with('=') {
+        mode = Mode::Exact;
+        input = strip_first(input_raw);
+    } else if input_raw.ends_with(['*', '＊']) {
+        mode = Mode::Prefix;
+        input = strip_last(input_raw);
+    } else if input_raw.starts_with(['*', '＊']) {
+        mode = Mode::Postfix;
+        input = strip_first(input_raw);
+    }
+
     if input.chars().any(|c| is_kanji(&c)) {
-        collect_results(&J2E, input)
+        match mode {
+            Mode::Default => collect_results(&J2E, input),
+            Mode::Exact => collect_exact_results(&J2E, input),
+            Mode::Prefix => collect_prefix_results(&J2E, input),
+            Mode::Postfix => collect_postfix_results(&J2E, input),
+        }
     } else if input.chars().all(|c| is_hiragana(&c) || is_katakana(&c)) {
-        collect_results(&READING, input)
+        match mode {
+            Mode::Default => collect_results(&READING, input),
+            Mode::Exact => collect_exact_results(&READING, input),
+            Mode::Prefix => collect_prefix_results(&READING, input),
+            Mode::Postfix => collect_postfix_results(&READING, input),
+        }
     } else {
-        collect_prefix_results(&E2J, input)
+        match mode {
+            Mode::Default => collect_prefix_results(&E2J, input), // Not a bug!
+            Mode::Exact => collect_exact_results(&E2J, input),
+            Mode::Prefix => collect_prefix_results(&E2J, input),
+            Mode::Postfix => collect_postfix_results(&E2J, input),
+        }
     }
 }
 
