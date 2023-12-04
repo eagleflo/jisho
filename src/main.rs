@@ -21,6 +21,12 @@ fn print_results(results: Vec<&Entry>) {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.contains(&"-v".to_string()) || args.contains(&"--version".to_string()) {
+        let name = env!("CARGO_PKG_NAME");
+        let version = env!("CARGO_PKG_VERSION");
+        println!("{} {}", name, version);
+        std::process::exit(0);
+    }
     if args.len() < 2 {
         let mut rl = DefaultEditor::new().unwrap();
         loop {
