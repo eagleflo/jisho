@@ -1,6 +1,7 @@
+use flate2::read::GzDecoder;
 use serde::Serialize;
 use serde_json::json;
-use std::{collections::HashMap, env, fs, path::Path};
+use std::{collections::HashMap, env, fs, io::Read, path::Path};
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
@@ -24,7 +25,9 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
     let mut reading = HashMap::new();
-    let xml = fs::read_to_string("./JMdict_e.xml").unwrap();
+    let mut gz = GzDecoder::new(fs::File::open("./JMdict_e.gz").unwrap());
+    let mut xml = String::new();
+    gz.read_to_string(&mut xml).unwrap();
     let opt = roxmltree::ParsingOptions {
         allow_dtd: true,
         ..roxmltree::ParsingOptions::default()
@@ -100,5 +103,5 @@ fn main() {
     let reading_json = json!(reading);
     fs::write(reading_path, reading_json.to_string()).unwrap();
 
-    println!("cargo:rerun-if-changed=JMdict_e.xml");
+    println!("cargo:rerun-if-changed=JMdict_e.gz");
 }
