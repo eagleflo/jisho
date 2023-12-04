@@ -1,6 +1,6 @@
 use std::env;
 
-use rustyline::Editor;
+use rustyline::DefaultEditor;
 
 use jisho::{lookup, Entry};
 
@@ -22,7 +22,7 @@ fn print_results(results: Vec<&Entry>) {
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        let mut rl = Editor::<()>::new().unwrap();
+        let mut rl = DefaultEditor::new().unwrap();
         loop {
             let readline = rl.readline("> ");
             match readline {
@@ -30,7 +30,7 @@ fn main() {
                     if line.is_empty() {
                         continue;
                     }
-                    rl.add_history_entry(line.as_str());
+                    let _ = rl.add_history_entry(line.as_str());
                     let results = lookup(line.trim());
                     print_results(results);
                 }
