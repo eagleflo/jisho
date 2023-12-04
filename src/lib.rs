@@ -34,20 +34,48 @@ fn is_katakana(c: &char) -> bool {
     *c >= '\u{30a0}' && *c <= '\u{30ff}'
 }
 
-fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+fn collect_exact_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
     let mut results = Vec::new();
     if dictionary.contains_key(input) {
         let entries = dictionary.get(input).unwrap();
         results.extend(entries);
-    } else {
-        for key in dictionary.keys() {
-            if key.starts_with(input) {
-                let entries = dictionary.get(key).unwrap();
-                results.extend(entries);
-            }
+    }
+    results.sort_by_key(|e| e.frequency);
+    results
+}
+
+fn collect_prefix_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+    let mut results = Vec::new();
+    for key in dictionary.keys() {
+        if key.starts_with(input) {
+            let entries = dictionary.get(key).unwrap();
+            results.extend(entries);
         }
     }
     results.sort_by_key(|e| e.frequency);
+    results
+}
+
+fn collect_postfix_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+    let mut results = Vec::new();
+    for key in dictionary.keys() {
+        if key.ends_with(input) {
+            let entries = dictionary.get(key).unwrap();
+            results.extend(entries);
+        }
+    }
+    results.sort_by_key(|e| e.frequency);
+    results
+}
+
+fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+    let mut results = collect_exact_results(dictionary, input);
+    if results.is_empty() {
+        results.extend(collect_prefix_results(dictionary, input));
+    }
+    if results.is_empty() {
+        results.extend(collect_postfix_results(dictionary, input));
+    }
     results
 }
 
@@ -57,7 +85,7 @@ pub fn lookup(input: &str) -> Vec<&Entry> {
     } else if input.chars().all(|c| is_hiragana(&c) || is_katakana(&c)) {
         collect_results(&READING, input)
     } else {
-        collect_results(&E2J, input)
+        collect_prefix_results(&E2J, input)
     }
 }
 
