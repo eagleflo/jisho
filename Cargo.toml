@@ -16,7 +16,7 @@ exclude = ["Jisho.org", "kanjidic2.xml"]
 [dependencies]
 lazy_static = "1.4.0"
 rustc-hash = "1.1.0"
-rustyline = "12.0.0"
+rustyline = "14.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
