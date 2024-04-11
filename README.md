@@ -1,6 +1,7 @@
 # Jisho (辞書)
 
 [![crates.io](https://img.shields.io/crates/v/jisho.svg)](https://crates.io/crates/jisho)
+[![dependency status](https://deps.rs/repo/github/eagleflo/jisho/status.svg)](https://deps.rs/repo/github/eagleflo/jisho)
 
 Jisho is a CLI tool & Rust library that provides offline access to [JMdict][],
 the excellent machine-readable Japanese-English dictionary project originally
