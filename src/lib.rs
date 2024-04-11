@@ -61,7 +61,11 @@ fn collect_prefix_results(dictionary: &'static Dictionary, input: &str) -> Vec<&
     for key in dictionary.keys() {
         if key.starts_with(input) {
             let entries = dictionary.get(key).unwrap();
-            results.extend(entries);
+            for entry in entries {
+                if !results.contains(&entry) {
+                    results.push(entry);
+                }
+            }
         }
     }
     results.sort_by_key(|e| e.frequency);
@@ -73,7 +77,11 @@ fn collect_postfix_results(dictionary: &'static Dictionary, input: &str) -> Vec<
     for key in dictionary.keys() {
         if key.ends_with(input) {
             let entries = dictionary.get(key).unwrap();
-            results.extend(entries);
+            for entry in entries {
+                if !results.contains(&entry) {
+                    results.push(entry);
+                }
+            }
         }
     }
     results.sort_by_key(|e| e.frequency);
@@ -167,7 +175,11 @@ mod tests {
 
     #[test]
     fn meaning_lookup() {
-        let results = lookup("green");
-        assert!(results.contains(&&entry()))
+        let mut results = lookup("green");
+        assert!(results.contains(&&entry()));
+
+        let results_len = results.len();
+        results.dedup();
+        assert!(results_len == results.len())
     }
 }
