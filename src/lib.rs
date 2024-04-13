@@ -136,7 +136,7 @@ pub fn lookup(input_raw: &str) -> Vec<&Entry> {
         }
     } else {
         match mode {
-            Mode::Default => collect_prefix_results(&E2J, input), // Not a bug!
+            Mode::Default => collect_results(&E2J, input),
             Mode::Exact => collect_exact_results(&E2J, input),
             Mode::Prefix => collect_prefix_results(&E2J, input),
             Mode::Postfix => collect_postfix_results(&E2J, input),
