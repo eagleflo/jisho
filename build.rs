@@ -21,6 +21,19 @@ fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
     }
 }
 
+// JMdict often adds parenthetical explanations to its English meanings. We need
+// to cut them down to bare headwords.
+// FIXME: There are a number of meanings in JMdict that *begin* with parentheses.
+// These get lost via this process.
+fn trim_explanation(meaning: &str) -> &str {
+    if meaning.ends_with(')') {
+        if let Some(open_parenthesis) = meaning.find('(') {
+            return meaning[..open_parenthesis].trim();
+        }
+    }
+    meaning
+}
+
 fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
@@ -78,7 +91,8 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             upsert(&mut j2e, keb.to_string(), &entry);
         }
         for meaning in &entry.meanings {
-            upsert(&mut e2j, meaning.to_string(), &entry);
+            let headword = trim_explanation(meaning).to_string();
+            upsert(&mut e2j, headword, &entry);
         }
         upsert(&mut reading, reb.to_string(), &entry);
     }
