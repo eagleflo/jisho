@@ -37,15 +37,16 @@ fn main() {
                         continue;
                     }
                     let _ = rl.add_history_entry(line.as_str());
-                    let results = lookup(line.trim());
+                    let input = line.trim().to_lowercase();
+                    let results = lookup(&input);
                     print_results(results);
                 }
                 Err(_) => break,
             }
         }
     } else {
-        let input = &args[1..].join(" ");
-        let results = lookup(input.trim());
+        let input = &args[1..].join(" ").trim().to_lowercase();
+        let results = lookup(input);
         print_results(results);
     }
 }

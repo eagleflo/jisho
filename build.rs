@@ -91,7 +91,7 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
             upsert(&mut j2e, keb.to_string(), &entry);
         }
         for meaning in &entry.meanings {
-            let headword = trim_explanation(meaning).to_string();
+            let headword = trim_explanation(meaning).to_lowercase();
             upsert(&mut e2j, headword, &entry);
         }
         upsert(&mut reading, reb.to_string(), &entry);
