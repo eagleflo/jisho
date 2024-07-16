@@ -24,7 +24,8 @@ fn main() {
     if args.contains(&"-v".to_string()) || args.contains(&"--version".to_string()) {
         let name = env!("CARGO_PKG_NAME");
         let version = env!("CARGO_PKG_VERSION");
-        println!("{} {}", name, version);
+        let jmdict_version = include_str!(concat!(env!("OUT_DIR"), "/jmdict_version"));
+        println!("{} {} (JMdict {})", name, version, jmdict_version);
         std::process::exit(0);
     }
     if args.len() < 2 {

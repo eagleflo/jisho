@@ -36,10 +36,11 @@ fn trim_explanation(meaning: &str) -> &str {
     meaning
 }
 
-fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
+fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
     let mut j2e = HashMap::new();
     let mut e2j = HashMap::new();
     let mut reading = HashMap::new();
+    let mut version = String::from("unknown");
     let mut gz = GzDecoder::new(fs::File::open("./JMdict_e.gz").unwrap());
     let mut xml = String::new();
     gz.read_to_string(&mut xml).unwrap();
@@ -51,9 +52,19 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         Ok(doc) => doc,
         Err(e) => {
             println!("Error: {}", e);
-            return (j2e, e2j, reading);
+            return (j2e, e2j, reading, version);
         }
     };
+
+    if let Some(comment_node) = doc
+        .descendants()
+        .find(|n| n.is_comment() && n.text().unwrap().starts_with(" JMdict created: "))
+    {
+        // Version comment has the format "JMdict created: 2024-07-15"
+        let comment = comment_node.text().unwrap();
+        let parts: Vec<&str> = comment.split(": ").collect();
+        version = parts[1].trim().to_string();
+    }
 
     for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
         let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
@@ -99,11 +110,11 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary) {
         upsert(&mut reading, reb.to_string(), &entry);
     }
 
-    (j2e, e2j, reading)
+    (j2e, e2j, reading, version)
 }
 
 fn main() {
-    let (j2e, e2j, reading) = read_dictionary();
+    let (j2e, e2j, reading, version) = read_dictionary();
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
@@ -118,6 +129,9 @@ fn main() {
     let reading_path = Path::new(&out_dir).join("reading.json");
     let reading_json = json!(reading);
     fs::write(reading_path, reading_json.to_string()).unwrap();
+
+    let version_path = Path::new(&out_dir).join("jmdict_version");
+    fs::write(version_path, version).unwrap();
 
     println!("cargo:rerun-if-changed=JMdict_e.gz");
 }
