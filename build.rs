@@ -62,8 +62,9 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
     {
         // Version comment has the format "JMdict created: 2024-07-15"
         let comment = comment_node.text().unwrap();
-        let parts: Vec<&str> = comment.split(": ").collect();
-        version = parts[1].trim().to_string();
+        if let Some((_, version_str)) = comment.split_once(": ") {
+            version = version_str.trim().to_string();
+        }
     }
 
     for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
