@@ -5,7 +5,7 @@ use std::{collections::HashMap, env, fs, io::Read, path::Path};
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, PartialEq, Serialize)]
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
@@ -15,7 +15,9 @@ pub struct Entry {
 
 fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
     if let Some(entries) = dictionary.get_mut(&key) {
-        entries.push(entry.clone());
+        if !entries.contains(entry) {
+            entries.push(entry.clone());
+        }
     } else {
         dictionary.insert(key, vec![entry.clone()]);
     }
