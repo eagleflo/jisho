@@ -2,8 +2,8 @@ use bitcode::Encode;
 use flate2::read::GzDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
+use rustc_hash::FxHashMap;
 use std::{
-    collections::HashMap,
     env,
     error::Error,
     fs,
@@ -11,7 +11,7 @@ use std::{
     path::Path,
 };
 
-type Dictionary = HashMap<String, Vec<Entry>>;
+type Dictionary = FxHashMap<String, Vec<Entry>>;
 
 #[derive(Clone, PartialEq, Encode)]
 pub struct Entry {
@@ -45,9 +45,9 @@ fn trim_explanation(meaning: &str) -> &str {
 }
 
 fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
-    let mut j2e = HashMap::new();
-    let mut e2j = HashMap::new();
-    let mut reading = HashMap::new();
+    let mut j2e = FxHashMap::default();
+    let mut e2j = FxHashMap::default();
+    let mut reading = FxHashMap::default();
     let mut version = String::from("unknown");
     let mut gz = GzDecoder::new(fs::File::open("./JMdict_e.gz").unwrap());
     let mut xml = String::new();
