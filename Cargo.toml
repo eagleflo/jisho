@@ -16,7 +16,7 @@ exclude = ["Jisho.org", "JMdict_e.xml", "kanjidic2.xml"]
 [dependencies]
 bitcode = "0.6.3"
 flate2 = "1.0.35"
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 rustc-hash = "2.1.0"
 rustyline = "15.0.0"
 
