@@ -9,7 +9,7 @@ repository = "https://github.com/eagleflo/jisho"
 license = "GPL-3.0+"
 keywords = ["japanese", "dictionary", "kanji"]
 categories = ["command-line-utilities"]
-exclude = ["Jisho.org", "kanjidic2.xml"]
+exclude = ["Jisho.org", "JMdict_e.xml", "kanjidic2.xml"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
