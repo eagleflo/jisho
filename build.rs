@@ -1,6 +1,15 @@
 use bitcode::Encode;
 use flate2::read::GzDecoder;
-use std::{collections::HashMap, env, fs, io::Read, path::Path};
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
+use std::{
+    collections::HashMap,
+    env,
+    error::Error,
+    fs,
+    io::{Read, Write},
+    path::Path,
+};
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
@@ -113,25 +122,35 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
     (j2e, e2j, reading, version)
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let (j2e, e2j, reading, version) = read_dictionary();
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    let j2e_path = Path::new(&out_dir).join("j2e.bitcode");
+    let j2e_path = Path::new(&out_dir).join("j2e.bitcode.zlib");
     let j2e_bitcode = bitcode::encode(&j2e);
-    fs::write(j2e_path, j2e_bitcode).unwrap();
+    let mut j2e_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    j2e_compressed.write_all(&j2e_bitcode)?;
+    let j2e_bytes = j2e_compressed.finish()?;
+    fs::write(j2e_path, j2e_bytes).unwrap();
 
-    let e2j_path = Path::new(&out_dir).join("e2j.bitcode");
+    let e2j_path = Path::new(&out_dir).join("e2j.bitcode.zlib");
     let e2j_bitcode = bitcode::encode(&e2j);
-    fs::write(e2j_path, e2j_bitcode).unwrap();
+    let mut e2j_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    e2j_compressed.write_all(&e2j_bitcode)?;
+    let e2j_bytes = e2j_compressed.finish()?;
+    fs::write(e2j_path, e2j_bytes).unwrap();
 
-    let reading_path = Path::new(&out_dir).join("reading.bitcode");
+    let reading_path = Path::new(&out_dir).join("reading.bitcode.zlib");
     let reading_bitcode = bitcode::encode(&reading);
-    fs::write(reading_path, reading_bitcode).unwrap();
+    let mut reading_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+    reading_compressed.write_all(&reading_bitcode)?;
+    let reading_bytes = reading_compressed.finish()?;
+    fs::write(reading_path, reading_bytes).unwrap();
 
     let version_path = Path::new(&out_dir).join("jmdict_version");
     fs::write(version_path, version).unwrap();
 
     println!("cargo:rerun-if-changed=JMdict_e.gz");
+    Ok(())
 }

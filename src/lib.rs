@@ -1,6 +1,8 @@
 use bitcode::Decode;
+use flate2::read::ZlibDecoder;
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
+use std::io::Read;
 
 type Dictionary = FxHashMap<String, Vec<Entry>>;
 
@@ -13,12 +15,27 @@ pub struct Entry {
 }
 
 lazy_static! {
-    static ref J2E: Dictionary =
-        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/j2e.bitcode"))).unwrap();
-    static ref E2J: Dictionary =
-        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/e2j.bitcode"))).unwrap();
-    static ref READING: Dictionary =
-        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/reading.bitcode"))).unwrap();
+    static ref J2E: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/j2e.bitcode.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut v = Vec::new();
+        d.read_to_end(&mut v).unwrap();
+        bitcode::decode(&v).unwrap()
+    };
+    static ref E2J: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/e2j.bitcode.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut v = Vec::new();
+        d.read_to_end(&mut v).unwrap();
+        bitcode::decode(&v).unwrap()
+    };
+    static ref READING: Dictionary = {
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/reading.bitcode.zlib"));
+        let mut d = ZlibDecoder::new(b.as_slice());
+        let mut v = Vec::new();
+        d.read_to_end(&mut v).unwrap();
+        bitcode::decode(&v).unwrap()
+    };
 }
 
 fn strip_first(input: &str) -> &str {
