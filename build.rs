@@ -1,11 +1,10 @@
+use bitcode::Encode;
 use flate2::read::GzDecoder;
-use serde::Serialize;
-use serde_json::json;
 use std::{collections::HashMap, env, fs, io::Read, path::Path};
 
 type Dictionary = HashMap<String, Vec<Entry>>;
 
-#[derive(Clone, PartialEq, Serialize)]
+#[derive(Clone, PartialEq, Encode)]
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
@@ -119,17 +118,17 @@ fn main() {
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    let j2e_path = Path::new(&out_dir).join("j2e.json");
-    let j2e_json = json!(j2e);
-    fs::write(j2e_path, j2e_json.to_string()).unwrap();
+    let j2e_path = Path::new(&out_dir).join("j2e.bitcode");
+    let j2e_bitcode = bitcode::encode(&j2e);
+    fs::write(j2e_path, j2e_bitcode).unwrap();
 
-    let e2j_path = Path::new(&out_dir).join("e2j.json");
-    let e2j_json = json!(e2j);
-    fs::write(e2j_path, e2j_json.to_string()).unwrap();
+    let e2j_path = Path::new(&out_dir).join("e2j.bitcode");
+    let e2j_bitcode = bitcode::encode(&e2j);
+    fs::write(e2j_path, e2j_bitcode).unwrap();
 
-    let reading_path = Path::new(&out_dir).join("reading.json");
-    let reading_json = json!(reading);
-    fs::write(reading_path, reading_json.to_string()).unwrap();
+    let reading_path = Path::new(&out_dir).join("reading.bitcode");
+    let reading_bitcode = bitcode::encode(&reading);
+    fs::write(reading_path, reading_bitcode).unwrap();
 
     let version_path = Path::new(&out_dir).join("jmdict_version");
     fs::write(version_path, version).unwrap();

@@ -1,10 +1,10 @@
+use bitcode::Decode;
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
-use serde::Deserialize;
 
 type Dictionary = FxHashMap<String, Vec<Entry>>;
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Decode)]
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
@@ -14,11 +14,11 @@ pub struct Entry {
 
 lazy_static! {
     static ref J2E: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/j2e.json"))).unwrap();
+        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/j2e.bitcode"))).unwrap();
     static ref E2J: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/e2j.json"))).unwrap();
+        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/e2j.bitcode"))).unwrap();
     static ref READING: Dictionary =
-        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/reading.json"))).unwrap();
+        bitcode::decode(include_bytes!(concat!(env!("OUT_DIR"), "/reading.bitcode"))).unwrap();
 }
 
 fn strip_first(input: &str) -> &str {

@@ -14,14 +14,12 @@ exclude = ["Jisho.org", "kanjidic2.xml"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bitcode = "0.6.3"
 lazy_static = "1.4.0"
 rustc-hash = "2.0.0"
 rustyline = "15.0.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 
 [build-dependencies]
+bitcode = "0.6.3"
 flate2 = "1.0.28"
 roxmltree = "0.20.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
