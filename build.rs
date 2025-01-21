@@ -81,14 +81,18 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
     }
 
     for node in doc.descendants().filter(|n| n.has_tag_name("entry")) {
-        let keb = match node.descendants().find(|n| n.has_tag_name("keb")) {
-            Some(e) => e.text().unwrap(),
-            None => "",
-        };
-        let reb = match node.descendants().find(|n| n.has_tag_name("reb")) {
-            Some(e) => e.text().unwrap(),
-            None => continue,
-        };
+        let kebs: Vec<_> = node
+            .descendants()
+            .filter(|n| n.has_tag_name("keb"))
+            .map(|n| n.text().unwrap().to_string())
+            .collect();
+
+        let rebs: Vec<_> = node
+            .descendants()
+            .filter(|n| n.has_tag_name("reb"))
+            .map(|n| n.text().unwrap().to_string())
+            .collect();
+
         let nf = match node
             .descendants()
             .find(|n| n.has_tag_name("re_pri") && n.text().unwrap().starts_with("nf"))
@@ -110,8 +114,8 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
             .collect();
 
         let entry = Entry {
-            kanji: keb.to_string(),
-            reading: reb.to_string(),
+            kanji: kebs.first().map_or("", |v| v).to_string(),
+            reading: rebs.first().map_or("", |v| v).to_string(),
             meanings: senses,
             frequency: if !nf.is_empty() {
                 nf[2..].parse().unwrap_or(999)
@@ -120,16 +124,20 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
             },
         };
 
-        if !keb.is_empty() {
-            upsert(&mut j2e, keb.to_string(), &entry);
+        for keb in kebs {
+            upsert(&mut j2e, keb, &entry);
         }
+
         for meaning in &entry.meanings {
             for gloss in &meaning.glosses {
                 let headword = trim_explanation(gloss).to_lowercase();
                 upsert(&mut e2j, headword, &entry);
             }
         }
-        upsert(&mut reading, reb.to_string(), &entry);
+
+        for reb in rebs {
+            upsert(&mut reading, reb, &entry);
+        }
     }
 
     (j2e, e2j, reading, version)
