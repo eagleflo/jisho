@@ -10,8 +10,13 @@ type Dictionary = FxHashMap<String, Vec<Entry>>;
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
-    pub meanings: Vec<String>,
+    pub meanings: Vec<Sense>,
     pub frequency: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Decode)]
+pub struct Sense {
+    pub glosses: Vec<String>,
 }
 
 lazy_static! {
@@ -170,9 +175,12 @@ mod tests {
             kanji: "緑".to_string(),
             reading: "みどり".to_string(),
             meanings: vec![
-                "green".to_string(),
-                "greenery".to_string(),
-                "verdure".to_string(),
+                Sense {
+                    glosses: vec!["green".to_string()],
+                },
+                Sense {
+                    glosses: vec!["greenery".to_string(), "verdure".to_string()],
+                },
             ],
             frequency: 3,
         }

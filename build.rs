@@ -17,8 +17,13 @@ type Dictionary = FxHashMap<String, Vec<Entry>>;
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
-    pub meanings: Vec<String>,
+    pub meanings: Vec<Sense>,
     pub frequency: i32,
+}
+
+#[derive(Clone, PartialEq, Encode)]
+pub struct Sense {
+    pub glosses: Vec<String>,
 }
 
 fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
@@ -31,17 +36,17 @@ fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
     }
 }
 
-// JMdict often adds parenthetical explanations to its English meanings. We need
+// JMdict often adds parenthetical explanations to its English glosses. We need
 // to cut them down to bare headwords.
 // FIXME: There are a number of meanings in JMdict that *begin* with parentheses.
 // These get lost via this process.
-fn trim_explanation(meaning: &str) -> &str {
-    if meaning.ends_with(')') {
-        if let Some(open_parenthesis) = meaning.find('(') {
-            return meaning[..open_parenthesis].trim();
+fn trim_explanation(gloss: &str) -> &str {
+    if gloss.ends_with(')') {
+        if let Some(open_parenthesis) = gloss.find('(') {
+            return gloss[..open_parenthesis].trim();
         }
     }
-    meaning
+    gloss
 }
 
 fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
@@ -92,16 +97,22 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
             None => "",
         };
 
-        let glosses = node
+        let senses = node
             .descendants()
-            .filter(|n| n.has_tag_name("gloss"))
-            .map(|n| n.text().unwrap().to_string())
+            .filter(|n| n.has_tag_name("sense"))
+            .map(|n| Sense {
+                glosses: n
+                    .descendants()
+                    .filter(|n| n.has_tag_name("gloss"))
+                    .map(|n| n.text().unwrap().to_string())
+                    .collect(),
+            })
             .collect();
 
         let entry = Entry {
             kanji: keb.to_string(),
             reading: reb.to_string(),
-            meanings: glosses,
+            meanings: senses,
             frequency: if !nf.is_empty() {
                 nf[2..].parse().unwrap_or(999)
             } else {
@@ -113,8 +124,10 @@ fn read_dictionary() -> (Dictionary, Dictionary, Dictionary, String) {
             upsert(&mut j2e, keb.to_string(), &entry);
         }
         for meaning in &entry.meanings {
-            let headword = trim_explanation(meaning).to_lowercase();
-            upsert(&mut e2j, headword, &entry);
+            for gloss in &meaning.glosses {
+                let headword = trim_explanation(gloss).to_lowercase();
+                upsert(&mut e2j, headword, &entry);
+            }
         }
         upsert(&mut reading, reb.to_string(), &entry);
     }

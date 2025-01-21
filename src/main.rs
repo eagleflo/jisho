@@ -7,13 +7,27 @@ use jisho::{lookup, Entry};
 fn print_results(results: Vec<&Entry>) {
     for entry in results.iter() {
         if entry.kanji.is_empty() {
-            println!("{} - {}", entry.reading, entry.meanings.join(", "));
+            println!(
+                "{} - {}",
+                entry.reading,
+                entry
+                    .meanings
+                    .iter()
+                    .map(|s| s.glosses.join(", "))
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            );
         } else {
             println!(
                 "{}【{}】- {}",
                 entry.kanji,
                 entry.reading,
-                entry.meanings.join(", ")
+                entry
+                    .meanings
+                    .iter()
+                    .map(|s| s.glosses.join(", "))
+                    .collect::<Vec<_>>()
+                    .join("; ")
             );
         }
     }
