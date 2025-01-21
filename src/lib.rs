@@ -21,25 +21,37 @@ pub struct Sense {
 
 lazy_static! {
     static ref J2E: Dictionary = {
-        let b = include_bytes!(concat!(env!("OUT_DIR"), "/j2e.bitcode.zlib"));
-        let mut d = ZlibDecoder::new(b.as_slice());
-        let mut v = Vec::new();
-        d.read_to_end(&mut v).unwrap();
-        bitcode::decode(&v).unwrap()
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/j2e"));
+        if cfg!(feature = "compression") {
+            let mut d = ZlibDecoder::new(b.as_slice());
+            let mut v = Vec::new();
+            d.read_to_end(&mut v).unwrap();
+            bitcode::decode(&v).unwrap()
+        } else {
+            bitcode::decode(b).unwrap()
+        }
     };
     static ref E2J: Dictionary = {
-        let b = include_bytes!(concat!(env!("OUT_DIR"), "/e2j.bitcode.zlib"));
-        let mut d = ZlibDecoder::new(b.as_slice());
-        let mut v = Vec::new();
-        d.read_to_end(&mut v).unwrap();
-        bitcode::decode(&v).unwrap()
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/e2j"));
+        if cfg!(feature = "compression") {
+            let mut d = ZlibDecoder::new(b.as_slice());
+            let mut v = Vec::new();
+            d.read_to_end(&mut v).unwrap();
+            bitcode::decode(&v).unwrap()
+        } else {
+            bitcode::decode(b).unwrap()
+        }
     };
     static ref READING: Dictionary = {
-        let b = include_bytes!(concat!(env!("OUT_DIR"), "/reading.bitcode.zlib"));
-        let mut d = ZlibDecoder::new(b.as_slice());
-        let mut v = Vec::new();
-        d.read_to_end(&mut v).unwrap();
-        bitcode::decode(&v).unwrap()
+        let b = include_bytes!(concat!(env!("OUT_DIR"), "/reading"));
+        if cfg!(feature = "compression") {
+            let mut d = ZlibDecoder::new(b.as_slice());
+            let mut v = Vec::new();
+            d.read_to_end(&mut v).unwrap();
+            bitcode::decode(&v).unwrap()
+        } else {
+            bitcode::decode(b).unwrap()
+        }
     };
 }
 

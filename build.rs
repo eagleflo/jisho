@@ -148,25 +148,40 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    let j2e_path = Path::new(&out_dir).join("j2e.bitcode.zlib");
+    let j2e_path = Path::new(&out_dir).join("j2e");
     let j2e_bitcode = bitcode::encode(&j2e);
-    let mut j2e_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
-    j2e_compressed.write_all(&j2e_bitcode)?;
-    let j2e_bytes = j2e_compressed.finish()?;
+    let j2e_bytes: Vec<u8>;
+    if cfg!(feature = "compression") {
+        let mut j2e_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+        j2e_compressed.write_all(&j2e_bitcode)?;
+        j2e_bytes = j2e_compressed.finish()?;
+    } else {
+        j2e_bytes = j2e_bitcode;
+    }
     fs::write(j2e_path, j2e_bytes).unwrap();
 
-    let e2j_path = Path::new(&out_dir).join("e2j.bitcode.zlib");
+    let e2j_path = Path::new(&out_dir).join("e2j");
     let e2j_bitcode = bitcode::encode(&e2j);
-    let mut e2j_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
-    e2j_compressed.write_all(&e2j_bitcode)?;
-    let e2j_bytes = e2j_compressed.finish()?;
+    let e2j_bytes: Vec<u8>;
+    if cfg!(feature = "compression") {
+        let mut e2j_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+        e2j_compressed.write_all(&e2j_bitcode)?;
+        e2j_bytes = e2j_compressed.finish()?;
+    } else {
+        e2j_bytes = e2j_bitcode;
+    }
     fs::write(e2j_path, e2j_bytes).unwrap();
 
-    let reading_path = Path::new(&out_dir).join("reading.bitcode.zlib");
+    let reading_path = Path::new(&out_dir).join("reading");
     let reading_bitcode = bitcode::encode(&reading);
-    let mut reading_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
-    reading_compressed.write_all(&reading_bitcode)?;
-    let reading_bytes = reading_compressed.finish()?;
+    let reading_bytes: Vec<u8>;
+    if cfg!(feature = "compression") {
+        let mut reading_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
+        reading_compressed.write_all(&reading_bitcode)?;
+        reading_bytes = reading_compressed.finish()?;
+    } else {
+        reading_bytes = reading_bitcode;
+    }
     fs::write(reading_path, reading_bytes).unwrap();
 
     let version_path = Path::new(&out_dir).join("jmdict_version");
