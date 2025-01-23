@@ -14,7 +14,7 @@ Interactively:
 ``` shell
 $ jisho
 > 積ん読
-積ん読【つんどく】- buying books and not reading them, stockpiling books, tsundoku, books bought but not read
+積ん読【つんどく】- buying books and not reading them, stockpiling books, tsundoku; books bought but not read
 > International Space Station
 国際宇宙ステーション【こくさいうちゅうステーション】- International Space Station
 ```
