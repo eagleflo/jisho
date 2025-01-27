@@ -2,11 +2,12 @@ use bitcode::Decode;
 use flate2::read::ZlibDecoder;
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
+use serde::Serialize;
 use std::io::Read;
 
 type Dictionary = FxHashMap<String, Vec<Entry>>;
 
-#[derive(Clone, Debug, PartialEq, Decode)]
+#[derive(Clone, Debug, PartialEq, Decode, Serialize)]
 pub struct Entry {
     pub kanji: String,
     pub reading: String,
@@ -14,7 +15,7 @@ pub struct Entry {
     pub frequency: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, Decode)]
+#[derive(Clone, Debug, PartialEq, Decode, Serialize)]
 pub struct Sense {
     pub glosses: Vec<String>,
 }
