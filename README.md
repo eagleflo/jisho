@@ -11,7 +11,7 @@ started by Jim Breen.
 
 Interactively:
 
-``` shell
+```text
 $ jisho
 > 積ん読
 積ん読【つんどく】- buying books and not reading them, stockpiling books, tsundoku; books bought but not read
@@ -21,7 +21,7 @@ $ jisho
 
 Looking up individual entries:
 
-```shell
+```text
 $ jisho 辞書
 辞書【じしょ】- dictionary
 
@@ -31,7 +31,7 @@ $ jisho "quantum mechanics"
 
 Prefix and postfix matches:
 
-```shell
+```text
 > ＊飛行機
 飛行機【ひこうき】- airplane, aeroplane, plane, aircraft
 模型飛行機【もけいひこうき】- model plane
