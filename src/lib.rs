@@ -123,6 +123,27 @@ fn collect_postfix_results(dictionary: &'static Dictionary, input: &str) -> Vec<
     results
 }
 
+fn collect_wildcard_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
+    let mut results = Vec::new();
+    for key in dictionary.keys() {
+        if key.len() == input.len()
+            && key
+                .chars()
+                .zip(input.chars())
+                .all(|(k, i)| k == i || i == '?' || i == '？')
+        {
+            let entries = dictionary.get(key).unwrap();
+            for entry in entries {
+                if !results.contains(&entry) {
+                    results.push(entry);
+                }
+            }
+        }
+    }
+    results.sort_by_key(|e| e.frequency);
+    results
+}
+
 fn collect_results(dictionary: &'static Dictionary, input: &str) -> Vec<&'static Entry> {
     let mut results = collect_exact_results(dictionary, input);
     if results.is_empty() {
@@ -139,6 +160,7 @@ enum Mode {
     Exact,
     Prefix,
     Postfix,
+    Wildcard,
 }
 
 pub fn lookup(input_raw: &str) -> Vec<&Entry> {
@@ -153,6 +175,8 @@ pub fn lookup(input_raw: &str) -> Vec<&Entry> {
     } else if input_raw.starts_with(['*', '＊']) {
         mode = Mode::Postfix;
         input = strip_first(input_raw);
+    } else if input_raw.contains(['?', '？']) {
+        mode = Mode::Wildcard;
     }
 
     if input.chars().any(|c| is_kanji(&c)) {
@@ -161,6 +185,7 @@ pub fn lookup(input_raw: &str) -> Vec<&Entry> {
             Mode::Exact => collect_exact_results(&J2E, input),
             Mode::Prefix => collect_prefix_results(&J2E, input),
             Mode::Postfix => collect_postfix_results(&J2E, input),
+            Mode::Wildcard => collect_wildcard_results(&J2E, input),
         }
     } else if input.chars().all(|c| is_hiragana(&c) || is_katakana(&c)) {
         match mode {
@@ -168,6 +193,7 @@ pub fn lookup(input_raw: &str) -> Vec<&Entry> {
             Mode::Exact => collect_exact_results(&READING, input),
             Mode::Prefix => collect_prefix_results(&READING, input),
             Mode::Postfix => collect_postfix_results(&READING, input),
+            Mode::Wildcard => collect_wildcard_results(&READING, input),
         }
     } else {
         match mode {
@@ -175,6 +201,7 @@ pub fn lookup(input_raw: &str) -> Vec<&Entry> {
             Mode::Exact => collect_exact_results(&E2J, input),
             Mode::Prefix => collect_prefix_results(&E2J, input),
             Mode::Postfix => collect_postfix_results(&E2J, input),
+            Mode::Wildcard => collect_wildcard_results(&E2J, input),
         }
     }
 }
