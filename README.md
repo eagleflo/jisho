@@ -52,4 +52,11 @@ Prefix and postfix matches:
 飛行機酔い【ひこうきよい】- airsickness
 ```
 
+Wildcard matches:
+
+```
+> 飛？機
+飛行機【ひこうき】- airplane, aeroplane, plane, aircraft
+```
+
 [JMdict]: http://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project

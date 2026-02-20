@@ -1,7 +1,7 @@
 use bitcode::Encode;
+use flate2::Compression;
 use flate2::read::GzDecoder;
 use flate2::write::ZlibEncoder;
-use flate2::Compression;
 use rustc_hash::FxHashMap;
 use std::{
     env,
@@ -41,10 +41,10 @@ fn upsert(dictionary: &mut Dictionary, key: String, entry: &Entry) {
 // FIXME: There are a number of meanings in JMdict that *begin* with parentheses.
 // These get lost via this process.
 fn trim_explanation(gloss: &str) -> &str {
-    if gloss.ends_with(')') {
-        if let Some(open_parenthesis) = gloss.find('(') {
-            return gloss[..open_parenthesis].trim();
-        }
+    if gloss.ends_with(')')
+        && let Some(open_parenthesis) = gloss.find('(')
+    {
+        return gloss[..open_parenthesis].trim();
     }
     gloss
 }
@@ -150,38 +150,35 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let j2e_path = Path::new(&out_dir).join("j2e");
     let j2e_bitcode = bitcode::encode(&j2e);
-    let j2e_bytes: Vec<u8>;
-    if cfg!(feature = "compression") {
+    let j2e_bytes: Vec<u8> = if cfg!(feature = "compression") {
         let mut j2e_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
         j2e_compressed.write_all(&j2e_bitcode)?;
-        j2e_bytes = j2e_compressed.finish()?;
+        j2e_compressed.finish()?
     } else {
-        j2e_bytes = j2e_bitcode;
-    }
+        j2e_bitcode
+    };
     fs::write(j2e_path, j2e_bytes).unwrap();
 
     let e2j_path = Path::new(&out_dir).join("e2j");
     let e2j_bitcode = bitcode::encode(&e2j);
-    let e2j_bytes: Vec<u8>;
-    if cfg!(feature = "compression") {
+    let e2j_bytes: Vec<u8> = if cfg!(feature = "compression") {
         let mut e2j_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
         e2j_compressed.write_all(&e2j_bitcode)?;
-        e2j_bytes = e2j_compressed.finish()?;
+        e2j_compressed.finish()?
     } else {
-        e2j_bytes = e2j_bitcode;
-    }
+        e2j_bitcode
+    };
     fs::write(e2j_path, e2j_bytes).unwrap();
 
     let reading_path = Path::new(&out_dir).join("reading");
     let reading_bitcode = bitcode::encode(&reading);
-    let reading_bytes: Vec<u8>;
-    if cfg!(feature = "compression") {
+    let reading_bytes: Vec<u8> = if cfg!(feature = "compression") {
         let mut reading_compressed = ZlibEncoder::new(Vec::new(), Compression::best());
         reading_compressed.write_all(&reading_bitcode)?;
-        reading_bytes = reading_compressed.finish()?;
+        reading_compressed.finish()?
     } else {
-        reading_bytes = reading_bitcode;
-    }
+        reading_bitcode
+    };
     fs::write(reading_path, reading_bytes).unwrap();
 
     let version_path = Path::new(&out_dir).join("jmdict_version");

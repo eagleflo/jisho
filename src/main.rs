@@ -2,7 +2,7 @@ use std::env;
 
 use rustyline::DefaultEditor;
 
-use jisho::{lookup, Entry};
+use jisho::{Entry, lookup};
 
 fn print_results(results: Vec<&Entry>) {
     for entry in results.iter() {
