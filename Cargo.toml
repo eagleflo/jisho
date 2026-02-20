@@ -2,7 +2,7 @@
 name = "jisho"
 version = "0.2.9"
 authors = ["Aku Kotkavuo <aku.kotkavuo@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Jisho is a CLI tool & Rust library that provides a Japanese-English dictionary."
 readme = "README.md"
 repository = "https://github.com/eagleflo/jisho"
