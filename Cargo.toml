@@ -15,7 +15,7 @@ exclude = ["Jisho.org", "JMdict_e.xml", "kanjidic2.xml"]
 
 [dependencies]
 bitcode = "0.6.9"
-flate2 = "1.1.8"
+flate2 = "1.1.9"
 lazy_static = "1.5.0"
 rustc-hash = "2.1.1"
 rustyline = "17.0.2"
@@ -23,7 +23,7 @@ serde = { version = "1.0", features = ["derive"] }
 
 [build-dependencies]
 bitcode = "0.6.9"
-flate2 = "1.1.8"
+flate2 = "1.1.9"
 roxmltree = "0.21.1"
 rustc-hash = "2.1.1"
 
