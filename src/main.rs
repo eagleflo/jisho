@@ -42,6 +42,23 @@ fn main() {
         println!("{} {} (JMdict {})", name, version, jmdict_version);
         std::process::exit(0);
     }
+    if args.contains(&"-h".to_string()) || args.contains(&"--help".to_string()) {
+        println!("Usage: jisho [OPTIONS] [QUERY]");
+        println!();
+        println!("A bidirectional Japanese-English dictionary.");
+        println!("Without a query, starts an interactive REPL.");
+        println!();
+        println!("Options:");
+        println!("  -h, --help     Show this help");
+        println!("  -v, --version  Show version");
+        println!();
+        println!("Search modifiers:");
+        println!("  word*    Prefix match (entries starting with word)");
+        println!("  *word    Postfix match (entries ending with word)");
+        println!("  w?rd     Wildcard match (? matches any single character)");
+        println!("  =word    Exact match only");
+        std::process::exit(0);
+    }
     if args.len() < 2 {
         let mut rl = DefaultEditor::new().unwrap();
         loop {
