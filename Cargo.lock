@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "jisho"
-version = "0.2.10"
+version = "0.2.11"
 dependencies = [
  "bitcode",
  "flate2",
